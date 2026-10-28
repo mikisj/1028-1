@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+# 每次 push 到 main，或手動在 Actions 頁面點「Run workflow」時觸發
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一段時間只跑一個部署；新的 push 會自動取消還在跑的舊部署，避免互相覆蓋
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取得原始碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Vite 8 需要 Node 20.19 以上，這裡用 22 LTS 最穩
+          node-version: 22
+
+      - name: 安裝相依套件
+        # 儲存庫沒有 package-lock.json，所以用 npm install（npm ci 會失敗）
+        run: npm install
+
+      - name: 建置靜態網站（Vite）
+        env:
+          # 關鍵設定：GitHub Pages 專案網站位於子路徑 /1028-1/，
+          # 建置時必須加上 base，否則 JS/CSS 會去根路徑載入而 404，畫面一片空白。
+          # 本機開發與 AI Studio 預覽不設此變數，行為完全不變。
+          VITE_BASE_PATH: /1028-1/
+        run: npm run build
+
+      - name: 設定 GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上傳建置成果（dist/）
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 發布至 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
