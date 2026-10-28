@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MESBatch, ComplaintRecord } from '../types/fsd';
+import { sockPillingImg } from '../data/mockData';
 import { 
   Factory, 
   AlertOctagon, 
@@ -139,7 +140,7 @@ export const Module3Traceability: React.FC<Module3TraceabilityProps> = ({
             {/* Industrial Camera Canvas Simulation */}
             <div className="relative aspect-4/3 rounded-lg overflow-hidden border border-stone-800 bg-stone-950 group">
               <img
-                src="/src/assets/images/sock_pilling_macro_1793076541147.jpg"
+                src={sockPillingImg}
                 alt="AOI Camera Frame"
                 className="w-full h-full object-cover filter contrast-110 brightness-90"
                 referrerPolicy="no-referrer"

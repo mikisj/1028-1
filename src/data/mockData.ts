@@ -1,4 +1,9 @@
 import { SockProduct, MESBatch, ComplaintRecord } from '../types/fsd';
+import sockMerinoImg from '../assets/images/sock_merino_wool_1793076539951.jpg';
+import sockCottonImg from '../assets/images/sock_cotton_crew_1793076540452.jpg';
+import sockPillingImg from '../assets/images/sock_pilling_macro_1793076541147.jpg';
+
+export { sockMerinoImg, sockCottonImg, sockPillingImg };
 
 export const INITIAL_PRODUCTS: SockProduct[] = [
   {
@@ -13,7 +18,7 @@ export const INITIAL_PRODUCTS: SockProduct[] = [
     martindaleCycles: 25000,
     pillingGrade: 3.5,
     abrasionIndexText: '耐磨指數 ★★★★☆ / 抗起毛等級 3.5 級',
-    image: '/src/assets/images/sock_merino_wool_1793076539951.jpg',
+    image: sockMerinoImg,
     description: '特選 19.5 微米精梳羊毛，具備卓越控溫與抑菌防臭特性。毛圈底層提供充足緩震，適合長時間健走與低摩擦內裡鞋款。',
     shoeRecommendations: [
       {
@@ -65,7 +70,7 @@ export const INITIAL_PRODUCTS: SockProduct[] = [
     martindaleCycles: 35000,
     pillingGrade: 4.2,
     abrasionIndexText: '耐磨指數 ★★★★★ / 抗起毛等級 4.2 級',
-    image: '/src/assets/images/sock_cotton_crew_1793076540452.jpg',
+    image: sockCottonImg,
     description: '採用精梳工藝剔除 1cm 以下短纖，大幅提升棉紗緊密度，耐磨試驗超過 35,000 轉，不易起毛起球。',
     shoeRecommendations: [
       {
@@ -117,7 +122,7 @@ export const INITIAL_PRODUCTS: SockProduct[] = [
     martindaleCycles: 40000,
     pillingGrade: 4.8,
     abrasionIndexText: '耐磨指數 ★★★★★ / 抗起毛等級 4.8 級',
-    image: '/src/assets/images/sock_merino_wool_1793076539951.jpg',
+    image: sockMerinoImg,
     description: '經二次燒毛與絲光鹼化處理，纖維表面如絲般平滑光潔，擁有極低摩擦係數與最高抗起毛等級。',
     shoeRecommendations: [
       {
@@ -163,7 +168,7 @@ export const PRESET_INSPECTION_SAMPLES = [
   {
     id: 'sample-pilling-macro-3',
     name: '樣本 A：後腳跟嚴重起毛球 (3.0級 - 符合補償)',
-    thumbnail: '/src/assets/images/sock_pilling_macro_1793076541147.jpg',
+    thumbnail: sockPillingImg,
     grade: 3.0,
     confidence: 94.2,
     zone: '後腳跟與鞋內襯接縫處',
@@ -173,7 +178,7 @@ export const PRESET_INSPECTION_SAMPLES = [
   {
     id: 'sample-merino-mild-4',
     name: '樣本 B：羊毛初次穿著微毛茸 (4.0級 - 正常現象)',
-    thumbnail: '/src/assets/images/sock_merino_wool_1793076539951.jpg',
+    thumbnail: sockMerinoImg,
     grade: 4.0,
     confidence: 91.8,
     zone: '腳前掌側面',
@@ -183,7 +188,7 @@ export const PRESET_INSPECTION_SAMPLES = [
   {
     id: 'sample-cotton-pristine-5',
     name: '樣本 C：全新精梳棉布面 (5.0級 - 新品平整)',
-    thumbnail: '/src/assets/images/sock_cotton_crew_1793076540452.jpg',
+    thumbnail: sockCottonImg,
     grade: 5.0,
     confidence: 97.5,
     zone: '全襪面',
@@ -201,7 +206,7 @@ export const INITIAL_COMPLAINT_RECORDS: ComplaintRecord[] = [
     batchId: 'BATCH-2026-04A',
     customerName: '陳小姐 (Claire Chen)',
     purchaseDaysAgo: 12,
-    imageSrc: '/src/assets/images/sock_pilling_macro_1793076541147.jpg',
+    imageSrc: sockPillingImg,
     pillingGrade: 3.0,
     confidence: 93.6,
     affectedZone: '後腳跟阿基里斯腱接觸區',
@@ -221,7 +226,7 @@ export const INITIAL_COMPLAINT_RECORDS: ComplaintRecord[] = [
     batchId: 'BATCH-2026-04A',
     customerName: '林先生 (David Lin)',
     purchaseDaysAgo: 8,
-    imageSrc: '/src/assets/images/sock_pilling_macro_1793076541147.jpg',
+    imageSrc: sockPillingImg,
     pillingGrade: 2.8,
     confidence: 94.8,
     affectedZone: '腳後跟與鞋筒交界處',

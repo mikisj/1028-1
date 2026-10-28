@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SockProduct, ComplaintRecord } from '../types/fsd';
-import { PRESET_INSPECTION_SAMPLES } from '../data/mockData';
+import { PRESET_INSPECTION_SAMPLES, sockPillingImg } from '../data/mockData';
 import { 
   Sparkles, 
   Upload, 
@@ -36,9 +36,7 @@ export const Module2AICustomerService: React.FC<Module2AICustomerServiceProps> =
   const [customerName, setCustomerName] = useState<string>('陳小姐 (Claire)');
   const [orderId, setOrderId] = useState<string>('ORD-TW-98214');
   const [purchaseDaysAgo, setPurchaseDaysAgo] = useState<number>(14);
-  const [previewImage, setPreviewImage] = useState<string>(
-    '/src/assets/images/sock_pilling_macro_1793076541147.jpg'
-  );
+  const [previewImage, setPreviewImage] = useState<string>(sockPillingImg);
   const [activePresetId, setActivePresetId] = useState<string>('sample-pilling-macro-3');
 
   // Inspection & Result State
@@ -106,6 +104,27 @@ export const Module2AICustomerService: React.FC<Module2AICustomerServiceProps> =
     setIsAnalyzing(true);
     const startTime = performance.now();
 
+    const fallbackInspection = () => {
+      const presetGrade = activePresetId === 'sample-merino-mild-4' ? 4.0 : activePresetId === 'sample-cotton-pristine-5' ? 5.0 : 3.0;
+      const gradeMap: Record<number, { text: string; zone: string; features: string[]; summary: string }> = {
+        1: { text: '1級 (極度嚴重起球)', zone: '腳底至後跟大面積承壓區', features: ['纖維嚴重糾結成直徑 >2.5mm 密集毛球', '局部底紗微露', '表面絨感完全硬化結團'], summary: '全襪底與後腳跟區域纖維糾結極度密集，達退貨與即時補償最高標準。' },
+        2: { text: '2級 (明顯起球)', zone: '後腳跟阿基里斯腱與鞋內側高摩擦點', features: ['密集可見顯著毛球聚集', '短纖維脫離主體紗線', '基底編織未破針'], summary: '鞋後包內襯粗糙面反覆摩擦拉出短纖，毛球明顯可辨，符合售後即時補償標準。' },
+        3: { text: '3級 (中度起球 - 臨界門檻)', zone: '腳後跟與前掌受力點', features: ['散佈少量直徑約 1mm 毛球', '局部微毛茸外翻', '底紗彈性結構完好'], summary: '達標準起毛臨界第 3 級，因摩擦引發短纖聚簇，已觸發自動免寄回補償機制。' },
+        4: { text: '4級 (輕度毛茸 - 良好)', zone: '腳掌側面低摩擦區', features: ['表面輕微絨毛外露', '尚未形成緊密球體', '布面維持柔順平整'], summary: '屬於正常初次洗滌之浮毛釋出，物理結構強韌，建議配合洗衣袋反面洗滌即可恢復。' },
+        5: { text: '5級 (極佳無毛球 - 新品級)', zone: '全襪身', features: ['組織緊密平整', '完全無毛球與纏結', '光澤度均勻且紋理清晰'], summary: '布面平整度極佳，符合高規格 Martindale 20,000 轉以上之高耐磨抗起毛標準。' },
+      };
+      const info = gradeMap[Math.round(presetGrade)] || gradeMap[3];
+      return {
+        pillingGrade: presetGrade,
+        gradeText: info.text,
+        confidence: 93.4,
+        affectedZone: info.zone,
+        features: info.features,
+        inspectionSummary: info.summary,
+        isEligibleForWarranty: presetGrade <= 3.5,
+      };
+    };
+
     try {
       const isBase64 = previewImage.startsWith('data:');
       const response = await fetch('/api/inspect-pilling', {
@@ -119,24 +138,32 @@ export const Module2AICustomerService: React.FC<Module2AICustomerServiceProps> =
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`API HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       const endTime = performance.now();
       setAnalysisDuration(Number(((endTime - startTime) / 1000).toFixed(2)));
 
       if (data.success && data.result) {
         setInspectionResult(data.result);
-
-        // If eligible, generate unique voucher and fresh empathy script
         const newCode = `PILL-FREE-${Math.floor(1000 + Math.random() * 9000)}`;
         setVoucherCode(newCode);
-
-        // Auto trigger script generation
         generateEmpathyReply(data.result.pillingGrade, newCode);
+      } else {
+        throw new Error('Result format invalid');
       }
     } catch (err) {
-      console.error('Inspection request failed:', err);
+      console.warn('Inspection via backend API not available (e.g. GitHub Pages static mode), running client-side engine:', err);
+      const fallbackResult = fallbackInspection();
       const endTime = performance.now();
       setAnalysisDuration(Number(((endTime - startTime) / 1000).toFixed(2)));
+      setInspectionResult(fallbackResult);
+
+      const newCode = `PILL-FREE-${Math.floor(1000 + Math.random() * 9000)}`;
+      setVoucherCode(newCode);
+      generateEmpathyReply(fallbackResult.pillingGrade, newCode);
     } finally {
       setIsAnalyzing(false);
     }
@@ -145,6 +172,13 @@ export const Module2AICustomerService: React.FC<Module2AICustomerServiceProps> =
   // Generate Empathy Response via GenAI
   const generateEmpathyReply = async (grade: number, code: string) => {
     setIsGeneratingScript(true);
+    const fallbackText = `${customerName || '親愛的顧客'} 您好，感謝您第一時間與我們分享襪款的使用情況！
+對於讓您遇到起毛球的困擾，我們深感抱歉，也十分感謝您對穿著品質的細膩關注。
+
+天然高級天然羊毛與長絨精梳棉具有極佳透氣性與柔韌感，但在特定鞋款內裡（如粗糙皮質或運動鞋網布）的高頻摩擦下，纖維端點受剪切力作用會自然往表面遷移抱合，這是天然短纖的物理特性。
+
+為了讓您能毫無負擔地持續享受舒適體驗，我們已為您啟動「免寄回暖心保固」，自動派發專屬購物金 NT$50（折扣代碼：${code || 'PILL-FREE-8821'}），無使用門檻。建議您日後洗滌時將襪子反面翻出並放入細網洗衣袋，能大幅減少摩擦延長織物柔順度。再次感謝您的支持與包容！`;
+
     try {
       const response = await fetch('/api/generate-empathy-response', {
         method: 'POST',
@@ -158,38 +192,45 @@ export const Module2AICustomerService: React.FC<Module2AICustomerServiceProps> =
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`API HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.success && data.replyText) {
         setEmpathyScript(data.replyText);
-        setTicketStatus('resolved');
-
-        // Record complaint into the global queue
-        const newRecord: ComplaintRecord = {
-          id: `TICKET-2026-${Math.floor(100 + Math.random() * 900)}`,
-          orderId,
-          sku: selectedProduct.sku,
-          productName: selectedProduct.name,
-          batchId: selectedProduct.sku === 'SKU-MERINO-01' ? 'BATCH-2026-04A' : 'BATCH-2026-03B',
-          customerName,
-          purchaseDaysAgo,
-          imageSrc: previewImage,
-          pillingGrade: grade,
-          confidence: inspectionResult?.confidence || 92.5,
-          affectedZone: inspectionResult?.affectedZone || '腳後跟摩擦處',
-          features: inspectionResult?.features || ['短纖端點外露抱合'],
-          inspectionSummary: inspectionResult?.inspectionSummary || 'AI 判讀符合售後補償標準',
-          empathyReply: data.replyText,
-          voucherCode: code,
-          voucherAmount: 50,
-          status: 'resolved_auto',
-          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        };
-        onRecordNewComplaint(newRecord);
+      } else {
+        setEmpathyScript(fallbackText);
       }
     } catch (err) {
-      console.error('Script generation failed:', err);
+      console.warn('Empathy script via backend API not available, using offline expert script:', err);
+      setEmpathyScript(fallbackText);
     } finally {
+      setTicketStatus('resolved');
       setIsGeneratingScript(false);
+
+      // Record complaint into the global queue
+      const newRecord: ComplaintRecord = {
+        id: `TICKET-2026-${Math.floor(100 + Math.random() * 900)}`,
+        orderId,
+        sku: selectedProduct.sku,
+        productName: selectedProduct.name,
+        batchId: selectedProduct.sku === 'SKU-MERINO-01' ? 'BATCH-2026-04A' : 'BATCH-2026-03B',
+        customerName,
+        purchaseDaysAgo,
+        imageSrc: previewImage,
+        pillingGrade: grade,
+        confidence: inspectionResult?.confidence || 93.4,
+        affectedZone: inspectionResult?.affectedZone || '腳後跟摩擦處',
+        features: inspectionResult?.features || ['短纖端點外露抱合'],
+        inspectionSummary: inspectionResult?.inspectionSummary || 'AI 判讀符合售後補償標準',
+        empathyReply: fallbackText,
+        voucherCode: code,
+        voucherAmount: 50,
+        status: 'resolved_auto',
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      };
+      onRecordNewComplaint(newRecord);
     }
   };
 
